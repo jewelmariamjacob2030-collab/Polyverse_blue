@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: transparent; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { color: #eaf3f5; }
+    .builder-shell { overflow: hidden; border-radius: 22px; color: #eaf3f5; background: radial-gradient(circle at 78% 6%, rgba(28, 185, 177, .19), transparent 29%), radial-gradient(circle at 8% 100%, rgba(154, 91, 204, .18), transparent 34%), linear-gradient(135deg, #0c1729 0%, #10283a 57%, #101b31 100%); border: 1px solid rgba(129, 216, 224, .2); box-shadow: 0 18px 42px rgba(13, 31, 47, .15); padding: 20px; }
+    .builder-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .eyebrow { color: #a7d8cf; font-size: 10px; letter-spacing: .17em; font-weight: 800; text-transform: uppercase; }
+    .builder-title { margin: 5px 0 5px; font-weight: 800; font-size: clamp(18px, 2vw, 25px); letter-spacing: -.035em; color: #f6fbfa; }
+    .builder-brief { margin: 0; color: #b8cbd2; font-size: 13px; line-height: 1.5; }
+    .method-chip { white-space: nowrap; border: 1px solid rgba(123, 218, 207, .34); border-radius: 999px; padding: 8px 11px; color: #b8f3e5; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; background: rgba(67, 174, 159, .1); }
+    .builder-grid { display: grid; grid-template-columns: minmax(220px, .78fr) minmax(0, 1.55fr); gap: 14px; align-items: stretch; }
+    .panel { background: rgba(5, 17, 31, .58); border: 1px solid rgba(137, 185, 198, .17); border-radius: 17px; padding: 15px; min-width: 0; }
+    .panel-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 11px; }
+    .panel-title { color: #f1f7f6; font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    .panel-note { color: #8faab5; font-size: 10px; }
+    .palette-list { display: grid; gap: 9px; }
+    .monomer-card { display: flex; align-items: center; gap: 10px; padding: 11px; min-height: 76px; border-radius: 13px; cursor: grab; user-select: none; border: 1px solid rgba(129, 202, 213, .25); background: linear-gradient(135deg, rgba(31, 58, 76, .92), rgba(22, 39, 59, .88)); transition: transform .14s ease, border-color .14s ease, background .14s ease; }
+    .monomer-card:hover { transform: translateY(-2px); border-color: rgba(22, 132, 216, 0.7); background: linear-gradient(135deg, rgba(39, 79, 92, .95), rgba(34, 45, 75, .95)); }
+    .monomer-card:active { cursor: grabbing; }
+    .monomer-symbol { flex: 0 0 37px; width: 37px; height: 37px; border-radius: 11px; display: grid; place-items: center; color: #061624; font-size: 11px; font-weight: 900; background: var(--accent, #8fe2cf); box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #8fe2cf) 22%, transparent); }
+    .monomer-info { min-width: 0; flex: 1; }
+    .monomer-name { color: #eff8f7; font-size: 12px; line-height: 1.3; font-weight: 750; }
+    .monomer-formula { margin-top: 3px; color: #a7c1cc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; overflow-wrap: anywhere; }
+    .monomer-role { margin-top: 3px; color: #829ca8; font-size: 9px; }
+    .add-button { border: 1px solid rgba(143, 169, 226, 0.38); background: rgba(143, 226, 207, .09); color: #aef0df; border-radius: 9px; min-width: 34px; height: 32px; cursor: pointer; font-size: 17px; font-weight: 700; }
+    .add-button:hover { background: rgba(143, 178, 226, 0.2); }
+    .drag-tip { margin: 12px 1px 0; font-size: 10px; color: #8da7b2; line-height: 1.5; }
+    .canvas-panel { display: flex; flex-direction: column; min-height: 310px; }
+    .canvas-status { color: #96b4bf; font-size: 10px; }
+    .build-zone { position: relative; display: flex; align-items: center; align-content: center; flex-wrap: wrap; gap: 8px; flex: 1; min-height: 205px; padding: 15px; border: 1.5px dashed rgba(129, 211, 219, .42); border-radius: 14px; background: radial-gradient(circle at 50% 50%, rgba(67, 145, 165, .1), transparent 64%), rgba(5, 16, 30, .45); transition: background .15s ease, border-color .15s ease; }
+    .build-zone.is-over { border-color: #7af0d7; background-color: rgba(61, 174, 158, .13); box-shadow: inset 0 0 22px rgba(90, 120, 148, 0.08); }
+    .empty-state { text-align: center; width: 100%; color: #91aab5; font-size: 12px; line-height: 1.6; padding: 30px 10px; pointer-events: none; }
+    .empty-orbit { width: 42px; height: 42px; border: 1px solid rgba(74, 88, 101, 0.5); color: #8ef0d8; border-radius: 50%; display: grid; place-items: center; font-size: 20px; margin: 0 auto 10px; box-shadow: 0 0 20px rgba(67, 111, 150, 0.12); }
+    .chain-unit { position: relative; display: flex; align-items: center; gap: 5px; padding: 9px 8px 8px; border-radius: 12px; min-width: 98px; max-width: 145px; background: linear-gradient(145deg, #e9f7f2, #cdebe7); border: 1px solid rgba(141, 238, 220, .82); color: #123246; cursor: grab; box-shadow: 0 5px 15px rgba(23, 202, 181, .09); }
+    .chain-unit.dragging { opacity: .45; }
+    .chain-unit.drag-target { outline: 2px solid #b38aff; outline-offset: 2px; }
+    .unit-index { position: absolute; top: -7px; left: -6px; border-radius: 50%; width: 19px; height: 19px; display: grid; place-items: center; font-size: 9px; color: #fff; background: #6d58a9; border: 1px solid rgba(255,255,255,.55); }
+    .unit-copy { min-width: 0; flex: 1; }
+    .unit-name { font-size: 10px; line-height: 1.25; font-weight: 850; overflow-wrap: anywhere; }
+    .unit-formula { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; margin-top: 3px; color: #41626d; }
+    .unit-remove { border: 0; border-radius: 7px; background: rgba(12, 47, 61, .1); color: #315b66; width: 21px; height: 21px; line-height: 18px; cursor: pointer; font-size: 15px; padding: 0; }
+    .unit-remove:hover { background: rgba(151, 48, 65, .15); color: #8e243a; }
+    .chain-link { color: #8de8dc; font-size: 20px; font-weight: 700; text-shadow: 0 0 12px rgba(112, 230, 216, .75); flex: 0 0 auto; }
+    .canvas-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #92aab4; font-size: 10px; margin: 10px 1px 0; }
+    .progress-track { height: 5px; flex: 1; max-width: 135px; background: rgba(179, 204, 211, .15); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; width: 0%; background: linear-gradient(90deg, #7ad8d0, #bb8df1); transition: width .18s ease; }
+    .builder-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+    .action-button { border: 1px solid rgba(146, 210, 213, .35); border-radius: 999px; padding: 10px 15px; font-size: 11px; font-weight: 800; cursor: pointer; transition: transform .12s ease, filter .12s ease; }
+    .action-button:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .check-button { color: #0b2533; background: linear-gradient(100deg, #a6f1d8, #80d7ed); border-color: transparent; box-shadow: 0 6px 18px rgba(91, 217, 207, .17); }
+    .reset-button { color: #bbcad2; background: rgba(255,255,255,.04); }
+    .builder-bottom-tip { color: #95aeb9; font-size: 10px; line-height: 1.5; margin: 12px 2px 0; }
+    .builder-bottom-tip strong { color: #cde6e4; }
+    @media (max-width: 700px) {
+      .builder-shell { padding: 14px; border-radius: 17px; }
+      .builder-head { display: block; }
+      .method-chip { display: inline-block; margin-top: 10px; }
+      .builder-grid { grid-template-columns: 1fr; }
+      .palette-list { grid-template-columns: 1fr; }
+      .canvas-panel { min-height: 280px; }
+      .build-zone { min-height: 180px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="builder-shell" id="builder-root">
+    <div class="builder-head">
+      <div>
+        <div class="eyebrow">MATEX'S MOLECULAR WORKSHOP</div>
+        <div class="builder-title" id="builder-title">Build your polymer chain</div>
+        <p class="builder-brief" id="builder-brief">Drag the building blocks into the work area.</p>
+      </div>
+      <div class="method-chip" id="builder-method">Polymerisation challenge</div>
+    </div>
+    <div class="builder-grid">
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">Monomer palette</div>
+          <div class="panel-note">Drag or tap +</div>
+        </div>
+        <div class="palette-list" id="palette-list"></div>
+        <p class="drag-tip">Each card is a whole monomer molecule. Drag it into the chain area, or use the + button. You can add the same molecule more than once.</p>
+      </section>
+      <section class="panel canvas-panel">
+        <div class="panel-top">
+          <div class="panel-title">Polymer chain canvas</div>
+          <div class="canvas-status" id="chain-count">0 building blocks</div>
+        </div>
+        <div class="build-zone" id="build-zone" aria-label="Drop monomer molecules here to build a polymer chain">
+          <div class="empty-state"><div class="empty-orbit">＋</div>Drop the first monomer here.<br>Your polymer chain will grow from left to right.</div>
+        </div>
+        <div class="canvas-foot">
+          <span id="progress-label">0 units placed</span>
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <span id="progress-target">Goal: —</span>
+        </div>
+        <div class="builder-actions">
+          <button class="action-button check-button" id="check-build" type="button">Check my polymer ↗</button>
+          <button class="action-button reset-button" id="reset-build" type="button">Reset chain</button>
+        </div>
+        <p class="builder-bottom-tip"><strong>MATEX tip:</strong> You can drag a tile already in your chain onto another tile to change its position. Use × to remove a tile.</p>
+      </section>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const root = document.getElementById('builder-root');
+  const paletteEl = document.getElementById('palette-list');
+  const zone = document.getElementById('build-zone');
+  const countEl = document.getElementById('chain-count');
+  const progressLabel = document.getElementById('progress-label');
+  const progressTarget = document.getElementById('progress-target');
+  const progressFill = document.getElementById('progress-fill');
+  const titleEl = document.getElementById('builder-title');
+  const briefEl = document.getElementById('builder-brief');
+  const methodEl = document.getElementById('builder-method');
+  let args = {};
+  let sequence = [];
+  let syncedInitial = null;
+  let dragged = null;
+  let eventCounter = 0;
+
+  function sendToPython(payload) {
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: 'streamlit:setComponentValue',
+      value: payload,
+      dataType: 'json'
+    }, '*');
+  }
+
+  function setFrameHeight(height) {
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: 'streamlit:setFrameHeight',
+      height: height
+    }, '*');
+  }
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function paletteById(id) {
+    return (args.palette || []).find(function (item) { return item.id === id; }) || {
+      id: id, name: 'Unknown molecule', formula: '', role: '', color: '#9fb7c1'
+    };
+  }
+
+  function addUnit(id, index) {
+    const maxUnits = Number(args.max_units || 8);
+    if (sequence.length >= maxUnits) return;
+    if (typeof index === 'number') sequence.splice(index, 0, id);
+    else sequence.push(id);
+    renderChain();
+  }
+
+  function removeUnit(index) {
+    sequence.splice(index, 1);
+    renderChain();
+  }
+
+  function moveUnit(fromIndex, toIndex) {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    const moved = sequence.splice(fromIndex, 1)[0];
+    const adjusted = fromIndex < toIndex ? toIndex - 1 : toIndex;
+    sequence.splice(adjusted, 0, moved);
+    renderChain();
+  }
+
+  function renderPalette() {
+    paletteEl.innerHTML = (args.palette || []).map(function (item) {
+      const symbol = item.id.split('_').map(function (part) { return part.slice(0, 1); }).join('').slice(0, 3).toUpperCase();
+      return '<div class="monomer-card" draggable="true" data-monomer="' + esc(item.id) + '" style="--accent:' + esc(item.color) + '">' +
+        '<div class="monomer-symbol">' + esc(symbol) + '</div>' +
+        '<div class="monomer-info"><div class="monomer-name">' + esc(item.name) + '</div>' +
+        '<div class="monomer-formula">' + esc(item.formula) + '</div>' +
+        '<div class="monomer-role">' + esc(item.role) + '</div></div>' +
+        '<button class="add-button" type="button" data-add="' + esc(item.id) + '" aria-label="Add ' + esc(item.name) + '">+</button></div>';
+    }).join('');
+  }
+
+  function renderChain() {
+    const maxTarget = Number(args.target_units || 1);
+    const total = sequence.length;
+    countEl.textContent = total + (total === 1 ? ' building block' : ' building blocks');
+    progressLabel.textContent = total + ' / ' + maxTarget + ' monomer tiles placed';
+    progressTarget.textContent = args.target_label || ('Goal: ' + maxTarget + ' monomer tiles');
+    progressFill.style.width = Math.min(100, (total / maxTarget) * 100) + '%';
+
+    if (!total) {
+      zone.innerHTML = '<div class="empty-state"><div class="empty-orbit">＋</div>Drop the first monomer here.<br>Your polymer chain will grow from left to right.</div>';
+      return;
+    }
+
+    let html = '';
+    sequence.forEach(function (id, index) {
+      const monomer = paletteById(id);
+      if (index > 0) html += '<div class="chain-link" aria-hidden="true">⟷</div>';
+      html += '<div class="chain-unit" draggable="true" data-chain-index="' + index + '" title="Drag to rearrange">' +
+        '<span class="unit-index">' + (index + 1) + '</span>' +
+        '<div class="unit-copy"><div class="unit-name">' + esc(monomer.name) + '</div>' +
+        '<div class="unit-formula">' + esc(monomer.formula) + '</div></div>' +
+        '<button class="unit-remove" type="button" data-remove="' + index + '" aria-label="Remove ' + esc(monomer.name) + '">×</button></div>';
+    });
+    zone.innerHTML = html;
+    setFrameHeight(root.scrollHeight + 8);
+  }
+
+  function render() {
+    titleEl.textContent = 'Build ' + (args.polymer_name || 'your polymer') + ' chain';
+    briefEl.textContent = args.brief || 'Drag the monomer molecules into the chain canvas.';
+    methodEl.textContent = args.method || 'Polymerisation challenge';
+    renderPalette();
+    renderChain();
+    setFrameHeight(root.scrollHeight + 8);
+  }
+
+  function emit(action) {
+    eventCounter += 1;
+    sendToPython({
+      action: action,
+      sequence: sequence.slice(),
+      event_id: String(Date.now()) + '-' + String(eventCounter)
+    });
+  }
+
+  paletteEl.addEventListener('dragstart', function (event) {
+    const card = event.target.closest('.monomer-card');
+    if (!card) return;
+    dragged = {type: 'palette', id: card.getAttribute('data-monomer')};
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('text/plain', JSON.stringify(dragged));
+  });
+
+  paletteEl.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-add]');
+    if (button) addUnit(button.getAttribute('data-add'));
+  });
+
+  zone.addEventListener('dragstart', function (event) {
+    const unit = event.target.closest('[data-chain-index]');
+    if (!unit) return;
+    dragged = {type: 'chain', index: Number(unit.getAttribute('data-chain-index'))};
+    unit.classList.add('dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', JSON.stringify(dragged));
+  });
+
+  zone.addEventListener('dragend', function () {
+    dragged = null;
+    zone.querySelectorAll('.dragging, .drag-target').forEach(function (el) {
+      el.classList.remove('dragging', 'drag-target');
+    });
+  });
+
+  zone.addEventListener('dragover', function (event) {
+    event.preventDefault();
+    zone.classList.add('is-over');
+  });
+  zone.addEventListener('dragleave', function (event) {
+    if (!zone.contains(event.relatedTarget)) zone.classList.remove('is-over');
+  });
+
+  zone.addEventListener('drop', function (event) {
+    event.preventDefault();
+    zone.classList.remove('is-over');
+    let payload = dragged;
+    try {
+      const transferText = event.dataTransfer.getData('text/plain');
+      if (transferText) payload = JSON.parse(transferText);
+    } catch (ignore) {}
+    if (!payload) return;
+
+    const targetUnit = event.target.closest('[data-chain-index]');
+    if (payload.type === 'palette') {
+      const index = targetUnit ? Number(targetUnit.getAttribute('data-chain-index')) : undefined;
+      addUnit(payload.id, index);
+    } else if (payload.type === 'chain' && targetUnit) {
+      moveUnit(Number(payload.index), Number(targetUnit.getAttribute('data-chain-index')));
+    }
+  });
+
+  zone.addEventListener('click', function (event) {
+    const remove = event.target.closest('[data-remove]');
+    if (remove) removeUnit(Number(remove.getAttribute('data-remove')));
+  });
+
+  document.getElementById('check-build').addEventListener('click', function () { emit('check'); });
+  document.getElementById('reset-build').addEventListener('click', function () {
+    sequence = [];
+    renderChain();
+    emit('reset');
+  });
+
+  window.addEventListener('message', function (event) {
+    if (!event.data || event.data.type !== 'streamlit:render') return;
+    args = event.data.args || {};
+    const initial = JSON.stringify(args.initial_sequence || []);
+    if (initial !== syncedInitial) {
+      sequence = (args.initial_sequence || []).slice();
+      syncedInitial = initial;
+    }
+    render();
+  });
+
+  window.parent.postMessage({isStreamlitMessage: true, type: 'streamlit:componentReady', apiVersion: 1}, '*');
+  setFrameHeight(root.scrollHeight + 8);
+})();
+</script>
+</body>
+</html>
